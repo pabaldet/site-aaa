@@ -547,6 +547,78 @@ img { max-width: 100%; display: block; }
   line-height: 1.6;
 }
 
+/* === ACTUALITÉS === */
+.actu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-top: 10px;
+}
+
+.actu-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 36px;
+  box-shadow: var(--shadow);
+  border-top: 4px solid var(--blue);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.actu-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(10, 31, 68, 0.14);
+}
+
+.actu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.actu-categorie {
+  background: var(--sky);
+  color: var(--blue);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border-radius: 50px;
+}
+
+.actu-date {
+  font-size: 0.85rem;
+  color: var(--gray);
+}
+
+.actu-img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.actu-card h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--blue-dark);
+  margin-bottom: 16px;
+  line-height: 1.4;
+}
+
+.actu-card p {
+  color: var(--gray);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.actu-card p:last-child {
+  margin-bottom: 0;
+}
+
 /* === CONTACT === */
 .contact-grid {
   display: grid;
