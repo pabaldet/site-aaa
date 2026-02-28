@@ -81,17 +81,32 @@ animatedElements.forEach(el => observer.observe(el));
 const form = document.getElementById('contactForm');
 const formMsg = document.getElementById('formMsg');
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const btn = form.querySelector('button[type="submit"]');
   btn.disabled = true;
   btn.textContent = 'Envoi en cours...';
+  formMsg.textContent = '';
 
-  // Simulation d'envoi (à remplacer par un vrai backend ou service comme Formspree)
-  setTimeout(() => {
-    formMsg.textContent = '✅ Message envoyé ! Nous vous répondrons rapidement.';
-    form.reset();
-    btn.disabled = false;
-    btn.textContent = 'Envoyer ✈';
-  }, 1200);
+  const data = new FormData(form);
+
+  try {
+    const response = await fetch('https://formspree.io/f/mwvnjepj', {
+      method: 'POST',
+      body: data,
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      formMsg.textContent = '✅ Message envoyé ! Nous vous répondrons rapidement.';
+      form.reset();
+    } else {
+      formMsg.textContent = '❌ Une erreur est survenue. Merci de réessayer.';
+    }
+  } catch {
+    formMsg.textContent = '❌ Impossible d\'envoyer le message. Vérifiez votre connexion.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Envoyer ✈';
 });
