@@ -1,22 +1,45 @@
-// === PLAYLIST VIDÉO HERO ===
+// === PLAYLIST VIDÉO HERO AVEC PRÉCHARGEMENT ===
 const heroVideo = document.querySelector('.hero-video');
 let currentVideo = 0;
 let videoPlaylist = [];
+let preloadedVideos = {};
+
+function preloadVideo(src) {
+  if (preloadedVideos[src]) return;
+  const v = document.createElement('video');
+  v.src = src;
+  v.preload = 'auto';
+  v.muted = true;
+  preloadedVideos[src] = v;
+}
+
+function playVideo(index) {
+  const src = videoPlaylist[index];
+  const next = videoPlaylist[(index + 1) % videoPlaylist.length];
+
+  if (preloadedVideos[src]) {
+    heroVideo.src = preloadedVideos[src].src;
+  } else {
+    heroVideo.src = src;
+  }
+  heroVideo.play();
+  preloadVideo(next);
+}
 
 fetch('videos.json')
   .then(res => res.json())
   .then(playlist => {
     videoPlaylist = playlist;
     if (videoPlaylist.length > 0) {
-      heroVideo.src = videoPlaylist[0];
-      heroVideo.play();
+      preloadVideo(videoPlaylist[0]);
+      if (videoPlaylist.length > 1) preloadVideo(videoPlaylist[1]);
+      playVideo(0);
     }
   });
 
 heroVideo.addEventListener('ended', () => {
   currentVideo = (currentVideo + 1) % videoPlaylist.length;
-  heroVideo.src = videoPlaylist[currentVideo];
-  heroVideo.play();
+  playVideo(currentVideo);
 });
 
 // === NAVBAR : effet au scroll ===
