@@ -11,7 +11,7 @@ BEGIN
     COALESCE(NEW.raw_user_meta_data->>'telephone', NULL),
     COALESCE(NEW.raw_user_meta_data->>'adresse', NULL),
     NULLIF(NEW.raw_user_meta_data->>'date_naissance', '')::DATE,
-    COALESCE(NEW.raw_user_meta_data->>'type_pilote', NULL),
+    COALESCE(NEW.raw_user_meta_data->>'type_membre', NULL),
     'membre'
   );
   RETURN NEW;

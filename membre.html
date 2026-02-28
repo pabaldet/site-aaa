@@ -96,7 +96,7 @@
         <div class="profil-item"><span>Email</span><strong>${profil.email}</strong></div>
         <div class="profil-item"><span>Téléphone</span><strong>${profil.telephone || '—'}</strong></div>
         <div class="profil-item"><span>Adresse</span><strong>${profil.adresse || '—'}</strong></div>
-        <div class="profil-item"><span>Type pilote</span><strong>${profil.type_pilote || '—'}</strong></div>
+        <div class="profil-item"><span>Type de membre</span><strong>${profil.type_membre === 'pilote' ? 'Membre pilote' : profil.type_membre === 'sympathisant' ? 'Membre sympathisant' : '—'}</strong></div>
         <div class="profil-item"><span>Membre depuis</span><strong>${new Date(profil.created_at).toLocaleDateString('fr-FR')}</strong></div>
       `;
 

@@ -37,7 +37,7 @@
             <thead>
               <tr>
                 <th>Nom</th><th>Email</th><th>Téléphone</th>
-                <th>Type pilote</th><th>Cotisation</th><th>Actions</th>
+                <th>Type membre</th><th>Cotisation</th><th>Actions</th>
               </tr>
             </thead>
             <tbody id="membresBody">
@@ -53,15 +53,25 @@
     <div class="modal" id="cotisModal">
       <div class="modal-box">
         <h3>Gérer la cotisation</h3>
+        <div class="cotis-info-box" id="cotisInfoBox"></div>
         <form id="cotisForm">
           <input type="hidden" id="c_membre_id" />
           <div class="form-group">
             <label>Année</label>
-            <input type="number" id="c_annee" value="2025" min="2020" max="2100" required />
+            <input type="number" id="c_annee" min="2020" max="2100" required />
+          </div>
+          <div class="form-group">
+            <label>Remise applicable</label>
+            <select id="c_remise">
+              <option value="">Plein tarif — 70 €</option>
+              <option value="premiere_annee_min">1ère année — 35 € (50% offert)</option>
+              <option value="premiere_annee_max">1ère année — 70 € (don du surplus)</option>
+              <option value="parrainage">Parrainage — 35 € (−50%)</option>
+            </select>
           </div>
           <div class="form-group">
             <label>Montant (€)</label>
-            <input type="number" id="c_montant" placeholder="80" required />
+            <input type="number" id="c_montant" required />
           </div>
           <div class="form-group">
             <label>Statut</label>
@@ -128,7 +138,7 @@
             <td><strong>${m.prenom} ${m.nom}</strong></td>
             <td>${m.email}</td>
             <td>${m.telephone || '—'}</td>
-            <td>${m.type_pilote || '—'}</td>
+            <td>${m.type_membre === 'pilote' ? 'Pilote' : m.type_membre === 'sympathisant' ? 'Sympathisant' : '—'}</td>
             <td>${statutBadge}</td>
             <td>
               <button class="btn-sm btn-blue" onclick="ouvrirCotis('${m.id}')">Cotisation</button>
@@ -146,9 +156,39 @@
       ));
     });
 
-    // Modal cotisation
+    // Calcul automatique du montant selon la remise
+    const TARIF_BASE = 70;
+    const anneeEnCours = new Date().getFullYear();
+
+    const montantParRemise = {
+      '':                   TARIF_BASE,
+      'premiere_annee_min': 35,
+      'premiere_annee_max': TARIF_BASE,
+      'parrainage':         35,
+    };
+
+    document.getElementById('c_remise').addEventListener('change', (e) => {
+      document.getElementById('c_montant').value = montantParRemise[e.target.value] ?? TARIF_BASE;
+    });
+
     window.ouvrirCotis = (membreId) => {
+      const membre = membres.find(m => m.id === membreId);
+      const cotisExistante = membre?.cotisations?.find(c => c.annee === anneeEnCours);
+      const estPremierAnnee = !membre?.cotisations?.some(c => c.annee < anneeEnCours);
+
+      // Info contextuelle
+      document.getElementById('cotisInfoBox').innerHTML = `
+        <strong>${membre.prenom} ${membre.nom}</strong>
+        — ${membre.type_membre === 'pilote' ? 'Membre pilote' : 'Membre sympathisant'}
+        ${estPremierAnnee ? '<span class="badge badge-premiere">1ère année</span>' : ''}
+      `;
+
       document.getElementById('c_membre_id').value = membreId;
+      document.getElementById('c_annee').value = anneeEnCours;
+      document.getElementById('c_remise').value = cotisExistante?.remise || (estPremierAnnee ? 'premiere_annee_min' : '');
+      document.getElementById('c_montant').value = cotisExistante?.montant || (estPremierAnnee ? 35 : TARIF_BASE);
+      document.getElementById('c_statut').value = cotisExistante?.statut || 'payé';
+      document.getElementById('c_date_paiement').value = cotisExistante?.date_paiement || '';
       document.getElementById('cotisModal').classList.add('open');
     };
     document.getElementById('cancelCotis').addEventListener('click', () => {
@@ -157,15 +197,15 @@
 
     document.getElementById('cotisForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const membre_id   = document.getElementById('c_membre_id').value;
-      const annee       = parseInt(document.getElementById('c_annee').value);
-      const montant     = parseFloat(document.getElementById('c_montant').value);
-      const statut      = document.getElementById('c_statut').value;
+      const membre_id     = document.getElementById('c_membre_id').value;
+      const annee         = parseInt(document.getElementById('c_annee').value);
+      const montant       = parseFloat(document.getElementById('c_montant').value);
+      const statut        = document.getElementById('c_statut').value;
+      const remise        = document.getElementById('c_remise').value || null;
       const date_paiement = document.getElementById('c_date_paiement').value || null;
 
-      // Upsert : crée ou met à jour la cotisation pour cette année
       await supabase.from('cotisations').upsert(
-        { membre_id, annee, montant, statut, date_paiement },
+        { membre_id, annee, montant, statut, remise, date_paiement },
         { onConflict: 'membre_id,annee' }
       );
 

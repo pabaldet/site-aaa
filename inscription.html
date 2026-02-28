@@ -50,13 +50,11 @@
         <input type="text" id="adresse" placeholder="1 rue de la Liberté, 44150 Ancenis" />
       </div>
       <div class="form-group">
-        <label for="type_pilote">Type de pilote</label>
-        <select id="type_pilote">
+        <label for="type_membre">Type de membre</label>
+        <select id="type_membre" required>
           <option value="">-- Sélectionnez --</option>
-          <option value="3axes">ULM 3 axes</option>
-          <option value="autogire">Autogire</option>
-          <option value="les_deux">3 axes et autogire</option>
-          <option value="debutant">Débutant</option>
+          <option value="sympathisant">Membre sympathisant</option>
+          <option value="pilote">Membre pilote</option>
         </select>
       </div>
       <button type="submit" class="btn btn-primary btn-full">Créer mon compte</button>
@@ -86,13 +84,13 @@
       const telephone     = document.getElementById('telephone').value;
       const date_naissance = document.getElementById('date_naissance').value;
       const adresse       = document.getElementById('adresse').value;
-      const type_pilote   = document.getElementById('type_pilote').value;
+      const type_membre   = document.getElementById('type_membre').value;
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { prenom, nom, telephone, adresse, type_pilote, date_naissance }
+          data: { prenom, nom, telephone, adresse, type_membre, date_naissance }
         }
       });
       if (error) { errEl.textContent = error.message; return; }

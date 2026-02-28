@@ -213,10 +213,11 @@
   font-weight: 700;
 }
 
-.badge-payé       { background: #dcfce7; color: #16a34a; }
-.badge-en\ attente { background: #fef9c3; color: #ca8a04; }
-.badge-expiré     { background: #fee2e2; color: #dc2626; }
-.badge-aucune     { background: #f1f5f9; color: #94a3b8; }
+.badge-payé        { background: #dcfce7; color: #16a34a; }
+.badge-en.attente  { background: #fef9c3; color: #ca8a04; }
+.badge-expiré      { background: #fee2e2; color: #dc2626; }
+.badge-aucune      { background: #f1f5f9; color: #94a3b8; }
+.badge-premiere    { background: #e0f2fe; color: #0369a1; margin-left: 8px; }
 
 /* Admin stats */
 .admin-stats {
@@ -295,6 +296,15 @@
   width: 100%;
   max-width: 460px;
   box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.cotis-info-box {
+  background: var(--sky);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 0.92rem;
+  color: var(--blue-dark);
 }
 
 .modal-box h3 {
