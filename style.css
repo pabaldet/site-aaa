@@ -172,6 +172,21 @@ img { max-width: 100%; display: block; }
   border-bottom-color: var(--blue-light);
 }
 
+.btn-nav-membre {
+  background: var(--blue-light);
+  color: var(--white);
+  padding: 8px 20px;
+  border-radius: 50px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+.btn-nav-membre:hover {
+  background: var(--white);
+  color: var(--blue-dark);
+}
+
 .burger {
   display: none;
   background: none;

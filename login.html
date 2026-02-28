@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion — AAA</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-container">
+    <a href="index.html" class="auth-logo">
+      <img src="media/LogoAAA.png" alt="AAA" />
+    </a>
+    <h1>Connexion</h1>
+    <p class="auth-subtitle">Accédez à votre espace membre</p>
+
+    <form id="loginForm" class="auth-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="votre@email.fr" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••" required />
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+      <p class="auth-error" id="authError"></p>
+    </form>
+
+    <p class="auth-link">Pas encore membre ? <a href="inscription.html">Créer un compte</a></p>
+    <p class="auth-link"><a href="index.html">← Retour au site</a></p>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+  <script type="module">
+    import { supabase } from './auth.js';
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('authError');
+      errEl.textContent = '';
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        errEl.textContent = 'Email ou mot de passe incorrect.';
+        return;
+      }
+
+      const { data: profil } = await supabase.from('profils').select('role').eq('id', data.user.id).single();
+      window.location.href = profil?.role === 'admin' ? 'admin.html' : 'membre.html';
+    });
+  </script>
+</body>
+</html>

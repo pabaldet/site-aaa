@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Espace membre — AAA</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-page">
+
+  <div class="dashboard-container">
+
+    <header class="dashboard-header">
+      <a href="index.html"><img src="media/LogoAAA.png" alt="AAA" class="dashboard-logo" /></a>
+      <h1>Espace membre</h1>
+      <button id="logoutBtn" class="btn btn-outline-dark">Déconnexion</button>
+    </header>
+
+    <main class="dashboard-main">
+
+      <section class="dashboard-card">
+        <h2>Mes informations</h2>
+        <div id="profilInfo" class="profil-grid">
+          <p>Chargement...</p>
+        </div>
+        <button class="btn btn-primary" id="editBtn">Modifier mes informations</button>
+      </section>
+
+      <section class="dashboard-card">
+        <h2>Mes cotisations</h2>
+        <table class="cotis-table" id="cotisTable">
+          <thead>
+            <tr><th>Année</th><th>Montant</th><th>Statut</th><th>Date de paiement</th></tr>
+          </thead>
+          <tbody id="cotisBody">
+            <tr><td colspan="4">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+    </main>
+
+    <!-- Modal modification profil -->
+    <div class="modal" id="editModal">
+      <div class="modal-box">
+        <h3>Modifier mes informations</h3>
+        <form id="editForm">
+          <div class="form-group">
+            <label>Téléphone</label>
+            <input type="tel" id="e_telephone" />
+          </div>
+          <div class="form-group">
+            <label>Adresse</label>
+            <input type="text" id="e_adresse" />
+          </div>
+          <div class="form-group">
+            <label>Date de naissance</label>
+            <input type="date" id="e_date_naissance" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline-dark" id="cancelEdit">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { supabase, requireAuth } from './auth.js';
+
+    const user = await requireAuth();
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'login.html';
+    });
+
+    // Chargement du profil
+    const { data: profil } = await supabase
+      .from('profils')
+      .select('*, cotisations(*)')
+      .eq('id', user.id)
+      .single();
+
+    if (profil) {
+      document.getElementById('profilInfo').innerHTML = `
+        <div class="profil-item"><span>Nom</span><strong>${profil.prenom} ${profil.nom}</strong></div>
+        <div class="profil-item"><span>Email</span><strong>${profil.email}</strong></div>
+        <div class="profil-item"><span>Téléphone</span><strong>${profil.telephone || '—'}</strong></div>
+        <div class="profil-item"><span>Adresse</span><strong>${profil.adresse || '—'}</strong></div>
+        <div class="profil-item"><span>Type pilote</span><strong>${profil.type_pilote || '—'}</strong></div>
+        <div class="profil-item"><span>Membre depuis</span><strong>${new Date(profil.created_at).toLocaleDateString('fr-FR')}</strong></div>
+      `;
+
+      // Cotisations
+      const cotisBody = document.getElementById('cotisBody');
+      if (profil.cotisations?.length > 0) {
+        cotisBody.innerHTML = profil.cotisations.map(c => `
+          <tr>
+            <td>${c.annee}</td>
+            <td>${c.montant} €</td>
+            <td><span class="badge badge-${c.statut}">${c.statut}</span></td>
+            <td>${c.date_paiement ? new Date(c.date_paiement).toLocaleDateString('fr-FR') : '—'}</td>
+          </tr>
+        `).join('');
+      } else {
+        cotisBody.innerHTML = '<tr><td colspan="4">Aucune cotisation enregistrée.</td></tr>';
+      }
+
+      // Pré-remplir modal
+      document.getElementById('e_telephone').value = profil.telephone || '';
+      document.getElementById('e_adresse').value = profil.adresse || '';
+      document.getElementById('e_date_naissance').value = profil.date_naissance || '';
+    }
+
+    // Modal édition
+    document.getElementById('editBtn').addEventListener('click', () => {
+      document.getElementById('editModal').classList.add('open');
+    });
+    document.getElementById('cancelEdit').addEventListener('click', () => {
+      document.getElementById('editModal').classList.remove('open');
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await supabase.from('profils').update({
+        telephone: document.getElementById('e_telephone').value,
+        adresse: document.getElementById('e_adresse').value,
+        date_naissance: document.getElementById('e_date_naissance').value || null,
+      }).eq('id', user.id);
+      document.getElementById('editModal').classList.remove('open');
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>

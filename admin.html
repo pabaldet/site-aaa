@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Administration — AAA</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-page">
+
+  <div class="dashboard-container">
+
+    <header class="dashboard-header">
+      <a href="index.html"><img src="media/LogoAAA.png" alt="AAA" class="dashboard-logo" /></a>
+      <h1>Administration</h1>
+      <button id="logoutBtn" class="btn btn-outline-dark">Déconnexion</button>
+    </header>
+
+    <main class="dashboard-main">
+
+      <!-- Statistiques -->
+      <div class="admin-stats" id="adminStats">
+        <div class="admin-stat-card"><span id="totalMembres">—</span><p>Membres</p></div>
+        <div class="admin-stat-card green"><span id="cotisA_jour">—</span><p>Cotisations à jour</p></div>
+        <div class="admin-stat-card orange"><span id="cotisAttente">—</span><p>En attente</p></div>
+      </div>
+
+      <!-- Liste des membres -->
+      <section class="dashboard-card">
+        <div class="card-header-row">
+          <h2>Liste des membres</h2>
+          <input type="text" id="searchInput" placeholder="Rechercher..." class="search-input" />
+        </div>
+        <div class="table-wrap">
+          <table class="cotis-table" id="membresTable">
+            <thead>
+              <tr>
+                <th>Nom</th><th>Email</th><th>Téléphone</th>
+                <th>Type pilote</th><th>Cotisation</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="membresBody">
+              <tr><td colspan="6">Chargement...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Modal cotisation -->
+    <div class="modal" id="cotisModal">
+      <div class="modal-box">
+        <h3>Gérer la cotisation</h3>
+        <form id="cotisForm">
+          <input type="hidden" id="c_membre_id" />
+          <div class="form-group">
+            <label>Année</label>
+            <input type="number" id="c_annee" value="2025" min="2020" max="2100" required />
+          </div>
+          <div class="form-group">
+            <label>Montant (€)</label>
+            <input type="number" id="c_montant" placeholder="80" required />
+          </div>
+          <div class="form-group">
+            <label>Statut</label>
+            <select id="c_statut">
+              <option value="payé">Payé</option>
+              <option value="en attente">En attente</option>
+              <option value="expiré">Expiré</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Date de paiement</label>
+            <input type="date" id="c_date_paiement" />
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-outline-dark" id="cancelCotis">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { supabase, requireAdmin } from './auth.js';
+
+    await requireAdmin();
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await supabase.auth.signOut();
+      window.location.href = 'login.html';
+    });
+
+    let membres = [];
+
+    async function chargerMembres() {
+      const { data } = await supabase
+        .from('profils')
+        .select('*, cotisations(*)')
+        .order('nom');
+      membres = data || [];
+      afficherMembres(membres);
+
+      // Stats
+      document.getElementById('totalMembres').textContent = membres.length;
+      const aJour = membres.filter(m => m.cotisations?.some(c => c.statut === 'payé' && c.annee === new Date().getFullYear())).length;
+      document.getElementById('cotisA_jour').textContent = aJour;
+      document.getElementById('cotisAttente').textContent = membres.length - aJour;
+    }
+
+    function afficherMembres(liste) {
+      const tbody = document.getElementById('membresBody');
+      if (!liste.length) {
+        tbody.innerHTML = '<tr><td colspan="6">Aucun membre.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = liste.map(m => {
+        const cotisAnnee = m.cotisations?.find(c => c.annee === new Date().getFullYear());
+        const statutBadge = cotisAnnee
+          ? `<span class="badge badge-${cotisAnnee.statut}">${cotisAnnee.statut}</span>`
+          : `<span class="badge badge-aucune">Aucune</span>`;
+        return `
+          <tr>
+            <td><strong>${m.prenom} ${m.nom}</strong></td>
+            <td>${m.email}</td>
+            <td>${m.telephone || '—'}</td>
+            <td>${m.type_pilote || '—'}</td>
+            <td>${statutBadge}</td>
+            <td>
+              <button class="btn-sm btn-blue" onclick="ouvrirCotis('${m.id}')">Cotisation</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Recherche
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      afficherMembres(membres.filter(m =>
+        `${m.prenom} ${m.nom} ${m.email}`.toLowerCase().includes(q)
+      ));
+    });
+
+    // Modal cotisation
+    window.ouvrirCotis = (membreId) => {
+      document.getElementById('c_membre_id').value = membreId;
+      document.getElementById('cotisModal').classList.add('open');
+    };
+    document.getElementById('cancelCotis').addEventListener('click', () => {
+      document.getElementById('cotisModal').classList.remove('open');
+    });
+
+    document.getElementById('cotisForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const membre_id   = document.getElementById('c_membre_id').value;
+      const annee       = parseInt(document.getElementById('c_annee').value);
+      const montant     = parseFloat(document.getElementById('c_montant').value);
+      const statut      = document.getElementById('c_statut').value;
+      const date_paiement = document.getElementById('c_date_paiement').value || null;
+
+      // Upsert : crée ou met à jour la cotisation pour cette année
+      await supabase.from('cotisations').upsert(
+        { membre_id, annee, montant, statut, date_paiement },
+        { onConflict: 'membre_id,annee' }
+      );
+
+      document.getElementById('cotisModal').classList.remove('open');
+      await chargerMembres();
+    });
+
+    await chargerMembres();
+  </script>
+</body>
+</html>

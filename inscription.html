@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inscription — AAA</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-container auth-container--wide">
+    <a href="index.html" class="auth-logo">
+      <img src="media/LogoAAA.png" alt="AAA" />
+    </a>
+    <h1>Adhérer à l'AAA</h1>
+    <p class="auth-subtitle">Remplissez le formulaire pour rejoindre l'association</p>
+
+    <form id="inscriptionForm" class="auth-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="prenom">Prénom</label>
+          <input type="text" id="prenom" placeholder="Jean" required />
+        </div>
+        <div class="form-group">
+          <label for="nom">Nom</label>
+          <input type="text" id="nom" placeholder="Dupont" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="votre@email.fr" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="8 caractères minimum" minlength="8" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="telephone">Téléphone</label>
+          <input type="tel" id="telephone" placeholder="06 12 34 56 78" />
+        </div>
+        <div class="form-group">
+          <label for="date_naissance">Date de naissance</label>
+          <input type="date" id="date_naissance" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="adresse">Adresse</label>
+        <input type="text" id="adresse" placeholder="1 rue de la Liberté, 44150 Ancenis" />
+      </div>
+      <div class="form-group">
+        <label for="type_pilote">Type de pilote</label>
+        <select id="type_pilote">
+          <option value="">-- Sélectionnez --</option>
+          <option value="3axes">ULM 3 axes</option>
+          <option value="autogire">Autogire</option>
+          <option value="les_deux">3 axes et autogire</option>
+          <option value="debutant">Débutant</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">Créer mon compte</button>
+      <p class="auth-error" id="authError"></p>
+      <p class="auth-success" id="authSuccess"></p>
+    </form>
+
+    <p class="auth-link">Déjà membre ? <a href="login.html">Se connecter</a></p>
+    <p class="auth-link"><a href="index.html">← Retour au site</a></p>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+  <script type="module">
+    import { supabase } from './auth.js';
+
+    document.getElementById('inscriptionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errEl = document.getElementById('authError');
+      const sucEl = document.getElementById('authSuccess');
+      errEl.textContent = '';
+      sucEl.textContent = '';
+
+      const email    = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const prenom   = document.getElementById('prenom').value;
+      const nom      = document.getElementById('nom').value;
+      const telephone     = document.getElementById('telephone').value;
+      const date_naissance = document.getElementById('date_naissance').value;
+      const adresse       = document.getElementById('adresse').value;
+      const type_pilote   = document.getElementById('type_pilote').value;
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      if (error) { errEl.textContent = error.message; return; }
+
+      await supabase.from('profils').insert({
+        id: data.user.id,
+        email, prenom, nom, telephone,
+        date_naissance: date_naissance || null,
+        adresse, type_pilote, role: 'membre'
+      });
+
+      sucEl.textContent = '✅ Compte créé ! Vérifiez votre email pour confirmer votre inscription.';
+      document.getElementById('inscriptionForm').reset();
+    });
+  </script>
+</body>
+</html>
