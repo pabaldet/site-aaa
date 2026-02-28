@@ -72,6 +72,7 @@
     import { supabase, requireAuth } from './auth.js';
 
     const user = await requireAuth();
+    if (!user) return;
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await supabase.auth.signOut();
@@ -79,11 +80,15 @@
     });
 
     // Chargement du profil
-    const { data: profil } = await supabase
+    const { data: profil, error: profilError } = await supabase
       .from('profils')
       .select('*, cotisations(*)')
       .eq('id', user.id)
       .single();
+
+    if (profilError) {
+      document.getElementById('profilInfo').innerHTML = `<p style="color:red">Erreur : ${profilError.message}</p>`;
+    }
 
     if (profil) {
       document.getElementById('profilInfo').innerHTML = `

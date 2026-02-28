@@ -88,17 +88,16 @@
       const adresse       = document.getElementById('adresse').value;
       const type_pilote   = document.getElementById('type_pilote').value;
 
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { prenom, nom, telephone, adresse, type_pilote, date_naissance }
+        }
+      });
       if (error) { errEl.textContent = error.message; return; }
 
-      await supabase.from('profils').insert({
-        id: data.user.id,
-        email, prenom, nom, telephone,
-        date_naissance: date_naissance || null,
-        adresse, type_pilote, role: 'membre'
-      });
-
-      sucEl.textContent = '✅ Compte créé ! Vérifiez votre email pour confirmer votre inscription.';
+      sucEl.textContent = '✅ Compte créé avec succès ! Vous pouvez maintenant vous connecter.';
       document.getElementById('inscriptionForm').reset();
     });
   </script>
